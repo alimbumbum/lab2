@@ -1,0 +1,12 @@
+<div id="menu" style="background-color:#3CB371;width:100px;height:500px;float:left;"> <a href = "enter" style="text-align:left">Exit</a> </div>
+<div style = "float:left;"> 
+	<p style = "text-align:left;font-size:20px"> 
+		Welcome to chat: 
+	</p>
+	<textarea align = "left" readonly style = "width:900px; height:250px;text-align:left">#comments#</textarea>
+	<form style = "text-align:bottom"; top:400px;" method = "post">
+		<p style = "text-align:left;font-size:20px;"> Your message: </p>
+		<input type = "text" name = "text" style = "text-align:left;width:800px; height: 80px;">   
+		<input type = "submit" value = "Send" style = "width:100px; height: 80px;" method = "post">  
+    </form> 
+</div> 

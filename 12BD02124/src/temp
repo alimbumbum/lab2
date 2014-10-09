@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<!HEAD STARTS>
+<head>
+<title>Enjoy chat</title>
+</head>
+<!BODY STARTS>	
+<body>
+<div id="container">
+    <div id="header" style="background-color:#00FF7F;"> <h1 style="margin-bottom:0;text-align:center"><i><b>Enjoy!</b>  </i></h1> </div>
+      
+	<!comment width:500px;float:left;text-align:center>
+     <div id="content" style="background-color:#B0C4DE;height:500px;text-align:center;">
+     	#content#
+     </div>
+    <div id="footer" style="background-color:#00FF7F;clear:both;text-align:center;"> Alimzhan Amanov © </div>
+</div>
+</body>
+</html>
