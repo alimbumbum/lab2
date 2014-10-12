@@ -1,6 +1,7 @@
 package EnjoyChat;
 
-import EnjoyChat.Model;
+import Model.*;
+import EnjoyChat.DataBase;
 import java.io.*;
 import java.util.*;
 import java.net.InetSocketAddress;
@@ -8,14 +9,12 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-
-
 public class HttpMain {
 	private static boolean loggedIn = false;
-	private static String comments = "", name = "";
+	private static User user;
 	public static void main(String[] args) throws Exception {
-		Model.initialize();
-		Model.process("admin", "1");
+		DataBase.initialize();
+		DataBase.process("admin", "1");
 		HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 		server.createContext("/enter", new EnterHandler());
 		server.createContext("/chat", new ChatHandler());
@@ -36,24 +35,6 @@ public class HttpMain {
 		return res;
 	}
 
-	private static int toDec(char ch) {
-		if ('0' <= ch && ch <= '9') return ch - '0';
-		return 10 + (ch - 'A');
-	}
-	private static String convert(String s) {
-		String t = "";
-		for (int i = 0; i < s.length(); i++) {
-			char ch = s.charAt(i);
-			if (ch == '+') t += ' ';
-			else if (ch == '%') {
-				System.out.println(toDec(s.charAt(i+1)) + " " + toDec(s.charAt(i+2)));
-				t += (char)(16 * toDec(s.charAt(i+1)) + toDec(s.charAt(i+2)));
-				i += 2;
-			} else t += ch;
-		}
-		return t;
-	}
-	
 	static class EnterHandler implements HttpHandler {
 		public void handle(HttpExchange t) throws IOException {
 			loggedIn = false;
@@ -73,16 +54,16 @@ public class HttpMain {
 					StringTokenizer st = new StringTokenizer(vars, "=&");
 					st.nextToken(); login = st.nextToken();
 					st.nextToken(); password = st.nextToken();
-					
-					if (Model.match(login, password)) {
+					user = DataBase.getUser(login);
+					if (user.isMatch(password)) {
 						response = template.replace("#content#", readFromFile("chat"));
 						t.getResponseHeaders().add("Location", "/chat");
 						t.sendResponseHeaders(301, response.getBytes().length);						
-						name = login;
-						loggedIn = true;						
+						loggedIn = true;
 					}
-					else throw new Exception("Login or password doesn't match");
-				} catch (Exception e){
+					else 
+						throw new Exception("Login or password doesn't match");
+				} catch (Exception e) {
 					String page = readFromFile("message").replace("#message#", "Invalid login or password.");					
 					response = template.replace("#content#", page);
 					t.getResponseHeaders().add("Content-type", "text/html; charset=UTF-8");
@@ -115,7 +96,7 @@ public class HttpMain {
 					st.nextToken(); password = st.nextToken();
 					st.nextToken(); confpass = st.nextToken();
 					if (!password.equals(confpass)) x = -2; 
-					else x = Model.process(login, password);					
+					else x = DataBase.process(login, password);					
 				} catch (Exception e) { 
 					x = -1;
 					e.printStackTrace();
@@ -135,7 +116,6 @@ public class HttpMain {
 			os.close();
 		}
 	}
-
 	
 	static class ChatHandler implements HttpHandler {
 		public void handle(HttpExchange t) throws IOException {
@@ -148,15 +128,14 @@ public class HttpMain {
 				os.close();
 			}
 			String response, template = readFromFile("temp").replace("#content#", readFromFile("chat"));
-			BufferedReader br = new BufferedReader(new InputStreamReader(t.getRequestBody()));
-			String vars = br.readLine();
-			br.close();
-			if (vars != null) { 
-				String msg = convert(vars.substring(5));//.replaceAll("+", " ");
-				comments += name + ": " + msg + "\n";
-			} 			
-			response = template.replace("#comments#", comments);
 			
+			BufferedReader br = new BufferedReader(new InputStreamReader(t.getRequestBody()));
+			Message msg = new Message(user.getLogin(), br.readLine());
+			System.out.println(msg.getContent());
+			br.close();
+			DataBase.addComments(msg);
+			
+			response = template.replace("#comments#", DataBase.getComments());
 			t.getResponseHeaders().add("Content-type", "text/html; charset=UTF-8");
 			t.sendResponseHeaders(200, response.getBytes().length);
 			OutputStream os = t.getResponseBody();
